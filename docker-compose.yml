@@ -1,0 +1,123 @@
+version: '3'
+
+services:
+  api-gateway:
+    image: api-gateway
+    build:
+      context: ./apps/api-gateway
+      dockerfile: dockerfile
+    container_name: api-gateway
+    depends_on:
+      - user-service
+      - video-service
+      - analytics-service
+      - health-service
+      - mail-service
+      - scheduled-batch-service
+    volumes:
+      - /tmp/history/npm-cache:/root/.npm:z
+      - ./apps/api-gateway/src:/usr/src/app/src:z
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
+      - STAGE=local
+      - POSTGRES_HOST=host.docker.internal
+      - REDIS_HOST=host.docker.internal
+    restart: always
+
+  user-service:
+    image: user-service
+    build:
+      context: ./apps/user
+      dockerfile: dockerfile
+    container_name: user-service
+    volumes:
+      - /tmp/history/npm-cache:/root/.npm:z
+      - ./apps/user/src:/usr/src/app/src:z
+    environment:
+      - PORT=3001
+      - STAGE=local
+      - POSTGRES_HOST=host.docker.internal
+      - REDIS_HOST=host.docker.internal
+    restart: always
+
+  video-service:
+    image: video-service
+    build:
+      context: ./apps/video
+      dockerfile: dockerfile
+    container_name: video-service
+    volumes:
+      - /tmp/history/npm-cache:/root/.npm:z
+      - ./apps/video/src:/usr/src/app/src:z
+    environment:
+      - PORT=3002
+      - STAGE=local
+      - POSTGRES_HOST=host.docker.internal
+      - REDIS_HOST=host.docker.internal
+    restart: always
+
+  analytics-service:
+    image: analytics-service
+    build:
+      context: ./apps/video
+      dockerfile: dockerfile
+    container_name: analytics-service
+    volumes:
+      - /tmp/history/npm-cache:/root/.npm:z
+      - ./apps/analytics/src:/usr/src/app/src:z
+    environment:
+      - PORT=3003
+      - STAGE=local
+      - POSTGRES_HOST=host.docker.internal
+      - REDIS_HOST=host.docker.internal
+    restart: always
+
+  health-service:
+    image: health-service
+    build:
+      context: ./apps/health
+      dockerfile: dockerfile
+    container_name: health-service
+    volumes:
+      - /tmp/history/npm-cache:/root/.npm:z
+      - ./apps/health/src:/usr/src/app/src:z
+    environment:
+      - PORT=3004
+      - STAGE=local
+      - POSTGRES_HOST=host.docker.internal
+      - REDIS_HOST=host.docker.internal
+    restart: always
+
+  mail-service:
+    image: mail-service
+    build:
+      context: ./apps/mail
+      dockerfile: dockerfile
+    container_name: mail-service
+    volumes:
+      - /tmp/history/npm-cache:/root/.npm:z
+      - ./apps/mail/src:/usr/src/app/src:z
+    environment:
+      - PORT=3005
+      - STAGE=local
+      - POSTGRES_HOST=host.docker.internal
+      - REDIS_HOST=host.docker.internal
+    restart: always
+
+  scheduled-batch-service:
+    image: scheduled-batch-service
+    build:
+      context: ./apps/scheduled-batch
+      dockerfile: dockerfile
+    container_name: scheduled-batch-service
+    volumes:
+      - /tmp/history/npm-cache:/root/.npm:z
+      - ./apps/scheduled-batch/src:/usr/src/app/src:z
+    environment:
+      - PORT=3006
+      - STAGE=local
+      - POSTGRES_HOST=host.docker.internal
+      - REDIS_HOST=host.docker.internal
+    restart: always
