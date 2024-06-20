@@ -26,7 +26,8 @@
     "test:e2e": "jest --config ./apps/nestjs-advanced-cqrs/test/jest-e2e.json",
     "microserviceCopyPackageJsonDockerComposeNoCache": "cp ./package.json ./apps/api-gateway && cp ./package.json ./apps/user && cp ./package.json ./apps/video && cp ./package.json ./apps/analytics && cp ./package.json ./apps/health && cp ./package.json ./apps/mail && cp ./package.json ./apps/scheduled-batch &&  docker-compose -p microservice down && docker-compose -p microservice build --no-cache && docker-compose -p microservice up --remove-orphans",
     "microserviceCopyPackageJson": "cp ./package.json ./apps/api-gateway && cp ./package.json ./apps/user && cp ./package.json ./apps/video && cp ./package.json ./apps/analytics && cp ./package.json ./apps/health && cp ./package.json ./apps/mail && cp ./package.json ./apps/scheduled-batch &&  docker-compose -p microservice down && docker-compose -p microservice up --remove-orphans",
-    "postgres": "docker-compose -f postgres.yml -p postgres down && docker-compose -f postgres.yml -p postgres up --remove-orphans"
+    "postgres": "docker-compose -f postgres.yml -p postgres down && docker-compose -f postgres.yml -p postgres up --remove-orphans",
+    "kafka": "docker-compose -f kafka-2.8.1.yml -p kafka down && docker-compose -f kafka-2.8.1.yml -p kafka up --remove-orphans"
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
