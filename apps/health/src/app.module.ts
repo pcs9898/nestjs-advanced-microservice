@@ -1,30 +1,14 @@
-import {
-  Logger,
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import jwtConfig from './common/config/jwt.config';
-import mailConfig from './common/config/mail.config';
-import postgresConfig from './common/config/postgres.config';
-import redisConfig from './common/config/redis.config';
-import sentryConfig from './common/config/sentry.config';
-import slackConfig from './common/config/slack.config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthModule } from './apis/auth/auth.module';
-import { HealthModule } from './apis/health/health.module';
-import { MailModule } from './apis/mail/mail.module';
-import { ScheduledBatchModule } from './apis/scheduled-batch/scheduled-batch.module';
-import { UserModule } from './apis/user/user.module';
-import { VideoModule } from './apis/video/video.module';
-import { AnalyticsModule } from './apis/analytics/analytics.module';
-import { JwtAccessGuard } from './apis/auth/guard/jwt-access.guard';
+import jwtConfig from './health/config/jwt.config';
+import mailConfig from './health/config/mail.config';
+import postgresConfig from './health/config/postgres.config';
+import redisConfig from './health/config/redis.config';
+import sentryConfig from './health/config/sentry.config';
+import slackConfig from './health/config/slack.config';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -35,7 +19,6 @@ import { JwtAccessGuard } from './apis/auth/guard/jwt-access.guard';
         jwtConfig,
         mailConfig,
         postgresConfig,
-        redisConfig,
         redisConfig,
         sentryConfig,
         slackConfig,
@@ -54,9 +37,11 @@ import { JwtAccessGuard } from './apis/auth/guard/jwt-access.guard';
           autoLoadEntities: true,
         };
 
+        console.log(configService.get('postgres.database'));
+
         if (configService.get('NODE_ENV') === 'development') {
           console.info('Sync Typeorm');
-          obj = Object.assign(obj, { synchronize: true, logging: true });
+          obj = Object.assign(obj, { synchronize: false, logging: true });
         }
         return obj;
       },
@@ -79,37 +64,7 @@ import { JwtAccessGuard } from './apis/auth/guard/jwt-access.guard';
         return obj;
       },
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 10,
-      },
-    ]),
-    AnalyticsModule,
-    AuthModule,
     HealthModule,
-    MailModule,
-    ScheduledBatchModule,
-    UserModule,
-    VideoModule,
-  ],
-  providers: [
-    // TO Do add access guard as providing app_guard
-    Logger,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: JwtAccessGuard,
-    },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggerMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
-  }
-}
+export class AppModule {}

@@ -1,25 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
-import {
-  HealthCheck,
-  HealthCheckService,
-  MemoryHealthIndicator,
-  TypeOrmHealthIndicator,
-} from '@nestjs/terminus';
+import { Controller } from '@nestjs/common';
+import { HealthCheck } from '@nestjs/terminus';
+import { MessagePattern } from '@nestjs/microservices';
+import { HealthService } from './health.service';
 
 @Controller('health')
 export class HealthController {
-  constructor(
-    private health: HealthCheckService,
-    private db: TypeOrmHealthIndicator,
-    private memory: MemoryHealthIndicator,
-  ) {}
+  constructor(private readonly healthService: HealthService) {}
 
-  @Get('/v1')
+  @MessagePattern({ cmd: 'healthCheckV1' })
   @HealthCheck()
-  checkV1() {
-    return this.health.check([
-      () => this.db.pingCheck('database'),
-      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
-    ]);
+  async checkV1() {
+    return await this.healthService.healthCheckV1();
   }
 }

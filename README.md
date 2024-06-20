@@ -21,13 +21,9 @@ applying microservices for all modules
 - [x] db entity, migration, index, seed
 - [x] common
 - [x] app.module.ts, main.ts settings
+- [x] all microservices docker-compose, db's docker-compose, .env configuration
 
-## Health Module
-
-- [x] api1-check/v1
-- [x] testCode
-
-## Auth Module
+## Api-gateway(include auth logic) - tcp, kafka
 
 - [x] api2-signup/v1
 - [x] api3-verifyAuthCode/v1
@@ -36,36 +32,34 @@ applying microservices for all modules
 - [x] api6-restoreAccessToken/v1
 - [x] api7-signout/v1
 - [x] cqrs (api2,3,4,5,6,7) with api v2
-- [x] testCode
 
-## Mail Module
+## Health MicroService - tcp
+
+- [x] api1-check/v1
+
+## Mail MicroService - tcp
 
 - [x] MailService-sendAuthCode
 - [x] MailService-sendFindTop5downloadVideos
-- [x] testCode
 
-## User Module
+## User MicroService - tcp
 
 - [x] api8-findAll/v1
 - [x] api9-findOne/v1
 - [x] cqrs (api8,9) with api v2
-- [x] testCode
 
-## Schedule-batch Module
+## Schedule-batch MicroService - tcp, kafka
 
 - [x] ScheduledBatchService-unVerifiedUserOver30DaysCleanUp
-- [x] testCode
 
-## Video Module
+## Video MicroService - tcp
 
 - [x] api10-upload/v1
 - [x] api11-findAll/v1
 - [x] api12-findOne/v1
 - [x] api13-download/v1
 - [x] cqrs (api10,11,12,13) with api v2
-- [x] testCode
 
-## Analytics Module
+## Analytics MicroService - kafka
 
 - [x] AnalyticsService-findTop5DownloadVideos
-- [x] testCode
