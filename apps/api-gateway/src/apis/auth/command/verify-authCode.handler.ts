@@ -10,8 +10,8 @@ export class VerifyAuthCodeHandler
   constructor(private readonly authService: AuthService) {}
 
   async execute(command: VerifyAuthCodeCommand): Promise<VerifyAuthCodeResDto> {
-    const { userId, authCode } = command;
+    const { userId, authCode, email } = command;
 
-    return await this.authService.verifyAuthCode({ userId, authCode });
+    return await this.authService.verifyAuthCode({ userId, authCode, email });
   }
 }

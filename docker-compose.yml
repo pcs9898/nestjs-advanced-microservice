@@ -24,7 +24,7 @@ services:
       - STAGE=local
       - POSTGRES_HOST=host.docker.internal
       - REDIS_HOST=host.docker.internal
-    restart: always
+    restart: unless-stopped
 
   user-service:
     image: user-service
@@ -40,7 +40,7 @@ services:
       - STAGE=local
       - POSTGRES_HOST=host.docker.internal
       - REDIS_HOST=host.docker.internal
-    restart: always
+    restart: unless-stopped
 
   video-service:
     image: video-service
@@ -56,7 +56,7 @@ services:
       - STAGE=local
       - POSTGRES_HOST=host.docker.internal
       - REDIS_HOST=host.docker.internal
-    restart: always
+    restart: unless-stopped
 
   analytics-service:
     image: analytics-service
@@ -72,7 +72,7 @@ services:
       - STAGE=local
       - POSTGRES_HOST=host.docker.internal
       - REDIS_HOST=host.docker.internal
-    restart: always
+    restart: unless-stopped
 
   health-service:
     image: health-service
@@ -88,7 +88,7 @@ services:
       - STAGE=local
       - POSTGRES_HOST=host.docker.internal
       - REDIS_HOST=host.docker.internal
-    restart: always
+    restart: unless-stopped
 
   mail-service:
     image: mail-service
@@ -104,7 +104,7 @@ services:
       - STAGE=local
       - POSTGRES_HOST=host.docker.internal
       - REDIS_HOST=host.docker.internal
-    restart: always
+    restart: unless-stopped
 
   scheduled-batch-service:
     image: scheduled-batch-service
@@ -120,4 +120,4 @@ services:
       - STAGE=local
       - POSTGRES_HOST=host.docker.internal
       - REDIS_HOST=host.docker.internal
-    restart: always
+    restart: unless-stopped

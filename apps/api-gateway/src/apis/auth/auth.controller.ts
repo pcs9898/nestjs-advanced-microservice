@@ -21,7 +21,7 @@ import {
 } from './dto/req.dto';
 import { JwtUnVerifiedGuard } from './guard/jwt-un-verified.guard';
 import { GetUser } from 'src/common/decorator/get-user.decorator';
-import { IAuthUser } from 'src/common/types/global-types';
+import { IAuthUser, IBeforeAuthUser } from 'src/common/types/global-types';
 import { Throttle } from '@nestjs/throttler';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { CommandBus } from '@nestjs/cqrs';
@@ -67,11 +67,12 @@ export class AuthController {
   @ApiPostResponse(VerifyAuthCodeResDto)
   @Post('verifyAuthCode/v1')
   async verifyAuthCodeV1(
-    @GetUser() { id: userId }: IAuthUser,
+    @GetUser() { id: userId, email }: IBeforeAuthUser,
     @Body() { authCode }: VerifyAuthCodeReqDto,
   ): Promise<VerifyAuthCodeResDto> {
     return await this.authService.verifyAuthCode({
       userId,
+      email,
       authCode: authCode,
     });
   }
@@ -81,11 +82,11 @@ export class AuthController {
   @ApiPostResponse(VerifyAuthCodeResDto)
   @Post('verifyAuthCode/v2')
   async verifyAuthCodeV2(
-    @GetUser() { id: userId }: IAuthUser,
+    @GetUser() { id: userId, email }: IBeforeAuthUser,
     @Body() { authCode }: VerifyAuthCodeReqDto,
   ): Promise<VerifyAuthCodeResDto> {
     return await this.commandBus.execute(
-      new VerifyAuthCodeCommand(userId, authCode),
+      new VerifyAuthCodeCommand(userId, authCode, email),
     );
   }
 
@@ -109,16 +110,20 @@ export class AuthController {
   @UseGuards(JwtUnVerifiedGuard)
   @ApiResponse({ status: 201, type: Boolean })
   @Post('resendAuthCode/v1')
-  async resendAuthCodeV1(@GetUser() { id }: IAuthUser): Promise<boolean> {
-    return await this.authService.resendAuthCode(id);
+  async resendAuthCodeV1(
+    @GetUser() { id, email }: IBeforeAuthUser,
+  ): Promise<boolean> {
+    return await this.authService.resendAuthCode({ id, email });
   }
 
   @ApiBearerAuth()
   @UseGuards(JwtUnVerifiedGuard)
   @ApiResponse({ status: 201, type: Boolean })
   @Post('resendAuthCode/v2')
-  async resendAuthCodeV2(@GetUser() { id }: IAuthUser): Promise<boolean> {
-    return await this.commandBus.execute(new ResendAuthCodeCommand(id));
+  async resendAuthCodeV2(
+    @GetUser() { id, email }: IBeforeAuthUser,
+  ): Promise<boolean> {
+    return await this.commandBus.execute(new ResendAuthCodeCommand(id, email));
   }
 
   @ApiBearerAuth()

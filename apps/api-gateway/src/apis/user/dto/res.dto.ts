@@ -14,12 +14,12 @@ export class FindUserResDto {
   @ApiProperty({ required: true })
   created_at: string;
 
-  static toDto({ id, email, role, createdAt: created_at }: User) {
+  static toDto({ id, email, role, createdAt }: User) {
     return {
       id,
       email,
       role: role.toString(),
-      created_at: created_at.toISOString(),
+      created_at: new Date(createdAt).toISOString(),
     };
   }
 }

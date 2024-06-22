@@ -1,13 +1,15 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import {
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IJwtPayload } from 'src/common/types/global-types';
-import { UserService } from 'src/apis/user/user.service';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class JwtUnVerifiedStrategy extends PassportStrategy(
@@ -16,7 +18,7 @@ export class JwtUnVerifiedStrategy extends PassportStrategy(
 ) {
   constructor(
     private readonly configService: ConfigService,
-    private readonly userService: UserService,
+    @Inject('USER_SERVICE') private userClient: ClientProxy,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -27,7 +29,10 @@ export class JwtUnVerifiedStrategy extends PassportStrategy(
 
   async validate(payload: IJwtPayload) {
     const id = payload.sub;
-    const user = await this.userService.findOneById({ id });
+
+    const user = await firstValueFrom(
+      this.userClient.send({ cmd: 'findUserById' }, { id }),
+    );
 
     if (!user) {
       throw new NotFoundException('User not exist');
@@ -37,6 +42,6 @@ export class JwtUnVerifiedStrategy extends PassportStrategy(
       throw new UnauthorizedException('User already verified');
     }
 
-    return { id };
+    return { id, email: user.email };
   }
 }

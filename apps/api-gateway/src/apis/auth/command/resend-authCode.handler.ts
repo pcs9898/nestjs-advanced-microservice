@@ -8,7 +8,7 @@ export class ResendAuthCodeHandler
 {
   constructor(private readonly authService: AuthService) {}
   async execute(command: ResendAuthCodeCommand): Promise<boolean> {
-    const { id } = command;
-    return await this.authService.resendAuthCode(id);
+    const { id, email } = command;
+    return await this.authService.resendAuthCode({ id, email });
   }
 }

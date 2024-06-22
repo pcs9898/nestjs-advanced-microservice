@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { MailModule } from '../mail/mail.module';
 import { JwtAccessStrategy } from './strategy/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
 import { JwtUnVerifiedStrategy } from './strategy/jwt-unVerified.strategy';
@@ -16,9 +15,31 @@ import { ResendAuthCodeHandler } from './command/resend-authCode.handler';
 import { RestoreAccessTokenHandler } from './command/restore-access-token.handler';
 import { SignOutHandler } from './command/sign-out.handler';
 import { SignOutEventHandler } from './event/sign-out-event.handler';
+import {
+  ClientProxyFactory,
+  ClientsModule,
+  Transport,
+} from '@nestjs/microservices';
 
 @Module({
-  imports: [UserModule, PassportModule, JwtModule, MailModule, CqrsModule],
+  imports: [
+    UserModule,
+    PassportModule,
+    JwtModule,
+    CqrsModule,
+    ClientsModule.register([
+      {
+        name: 'KAFKA',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'kafka',
+            brokers: ['host.docker.internal:9092'],
+          },
+        },
+      },
+    ]),
+  ],
   controllers: [AuthController],
   providers: [
     AuthService,
@@ -33,6 +54,18 @@ import { SignOutEventHandler } from './event/sign-out-event.handler';
     RestoreAccessTokenHandler,
     SignOutHandler,
     SignOutEventHandler,
+    {
+      provide: 'USER_SERVICE',
+      useFactory: () => {
+        return ClientProxyFactory.create({
+          transport: Transport.TCP,
+          options: {
+            host: 'user-service',
+            port: 3001,
+          },
+        });
+      },
+    },
   ],
 })
 export class AuthModule {}

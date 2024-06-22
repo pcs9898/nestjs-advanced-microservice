@@ -9,6 +9,6 @@ export class FindAllUsersHandler implements IQueryHandler {
   async execute(query: FindAllUsersQuery) {
     const { data } = query;
 
-    return await this.userService.findAll(data);
+    return await this.userService.findAllUser(data);
   }
 }

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -8,8 +9,6 @@ import {
 } from '@nestjs/common';
 import { SigninReqDto, SignupReqDto } from './dto/req.dto';
 import { DataSource } from 'typeorm';
-import { UserService } from '../user/user.service';
-import { MailService } from '../mail/mail.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRedis } from '@liaoliaots/nestjs-redis';
@@ -20,10 +19,8 @@ import {
   SignupResDto,
   VerifyAuthCodeResDto,
 } from './dto/res.dto';
-import { User } from '../user/entity/user.entity';
 import * as bcrypt from 'bcrypt';
 import {
-  SALT_ROUNDS,
   THIRTY_DAYS_IN_SECONDS,
   TWENTY_MINUTES_IN_SECONDS,
 } from './constants/auth.constants';
@@ -33,17 +30,20 @@ import {
   TAuthServiceSaveAuthCodeOnRedis,
   IAuthServiceSaveHashedRefreshTokenOnRedis,
   IAuthServiceVerifyEmailAuthCode,
+  IAuthServiceResendAuthCode,
 } from './interface/auth-service.interface';
+import { ClientKafka, ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly userService: UserService,
-    private readonly mailService: MailService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @InjectRedis() private readonly redis: Redis,
+    @Inject('USER_SERVICE') private client: ClientProxy,
+    @Inject('KAFKA') private kafkaClient: ClientKafka,
   ) {}
 
   async signup(data: SignupReqDto): Promise<SignupResDto> {
@@ -60,33 +60,26 @@ export class AuthService {
     let userId: string;
 
     try {
-      const user = await queryRunner.manager.findOneBy(User, { email });
+      const user = await firstValueFrom(
+        this.client.send({ cmd: 'findUserByEmail' }, { email }),
+      );
       if (user) throw new UnprocessableEntityException('User already exists');
 
-      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-      const userEntity = await queryRunner.manager.save(
-        await queryRunner.manager.create(User, {
-          email,
-          password: hashedPassword,
-        }),
+      const userEntity = await firstValueFrom(
+        this.client.send({ cmd: 'createUser' }, data),
       );
-
       userId = userEntity.id;
 
       const authCode = this.generateAuthCode();
 
       await this.saveAuthCodeOnRedis({
         userId,
+        email,
         authCode,
         ttl: TWENTY_MINUTES_IN_SECONDS,
       });
 
       const unVerifiedToken = this.generateUnVerifiedToken(userId);
-
-      await this.mailService.sendAuthCode({
-        email: userEntity.email,
-        authCode,
-      });
 
       await queryRunner.commitTransaction();
 
@@ -107,6 +100,7 @@ export class AuthService {
 
   async verifyAuthCode({
     userId,
+    email,
     authCode: stringAuthCode,
   }: IAuthServiceVerifyEmailAuthCode): Promise<VerifyAuthCodeResDto> {
     const authCode = Number(stringAuthCode);
@@ -130,10 +124,8 @@ export class AuthService {
       if (foundAuthCode !== authCode)
         throw new BadRequestException('Auth code is not match');
 
-      await queryRunner.manager.update(
-        User,
-        { id: userId },
-        { isVerified: true },
+      await firstValueFrom(
+        this.client.send({ cmd: 'updateUserVerified' }, { id: userId }),
       );
 
       // Get left ttl for if happen error
@@ -157,7 +149,12 @@ export class AuthService {
 
       // if error occurred, recover authCode on redis with left ttl
       if (leftTtl > 0) {
-        await this.saveAuthCodeOnRedis({ userId, authCode, ttl: leftTtl });
+        await this.saveAuthCodeOnRedis({
+          email,
+          userId,
+          authCode,
+          ttl: leftTtl,
+        });
       }
       error = e;
     } finally {
@@ -166,12 +163,16 @@ export class AuthService {
     }
   }
 
-  async resendAuthCode(userId: string): Promise<boolean> {
+  async resendAuthCode({
+    email,
+    id,
+  }: IAuthServiceResendAuthCode): Promise<boolean> {
     try {
       const authCode = this.generateAuthCode();
 
       await this.saveAuthCodeOnRedis({
-        userId,
+        email: email,
+        userId: id,
         authCode,
         ttl: TWENTY_MINUTES_IN_SECONDS,
       });
@@ -192,10 +193,12 @@ export class AuthService {
     let userId: string;
 
     try {
-      const user = await queryRunner.manager.findOneBy(User, { email });
-      userId = user.id;
-
+      const user = await firstValueFrom(
+        this.client.send({ cmd: 'findUserByEmail' }, { email }),
+      );
       if (!user) throw new NotFoundException('User not exist');
+
+      userId = user.id;
 
       const isPasswordMatch = await bcrypt.compare(password, user.password);
       if (!isPasswordMatch)
@@ -205,6 +208,7 @@ export class AuthService {
         const authCode = this.generateAuthCode();
 
         await this.saveAuthCodeOnRedis({
+          email,
           userId,
           authCode,
           ttl: TWENTY_MINUTES_IN_SECONDS,
@@ -264,7 +268,6 @@ export class AuthService {
       const { accessToken, refreshToken, hashedRefreshToken } =
         await this.generateAccessNRefreshNHashedRefreshToken(userId);
 
-      console.log(hashedRefreshToken);
       await this.saveHashedRefreshTokenOnRedis({ userId, hashedRefreshToken });
 
       return {
@@ -301,7 +304,13 @@ export class AuthService {
     userId,
     authCode,
     ttl,
+    email,
   }: TAuthServiceSaveAuthCodeOnRedis) {
+    this.kafkaClient.emit('sendUserAuthCode', {
+      email,
+      authCode,
+    });
+
     await this.redis.set(`auth_code:${userId}`, authCode, 'EX', ttl);
   }
 

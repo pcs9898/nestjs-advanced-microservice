@@ -19,7 +19,6 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './apis/auth/auth.module';
 import { HealthModule } from './apis/health/health.module';
-import { MailModule } from './apis/mail/mail.module';
 import { ScheduledBatchModule } from './apis/scheduled-batch/scheduled-batch.module';
 import { UserModule } from './apis/user/user.module';
 import { VideoModule } from './apis/video/video.module';
@@ -88,7 +87,6 @@ import { JwtAccessGuard } from './apis/auth/guard/jwt-access.guard';
     AnalyticsModule,
     AuthModule,
     HealthModule,
-    MailModule,
     ScheduledBatchModule,
     UserModule,
     VideoModule,

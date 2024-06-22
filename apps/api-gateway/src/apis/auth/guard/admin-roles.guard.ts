@@ -8,6 +8,6 @@ export class AdminRolesGuard implements CanActivate {
     const http = context.switchToHttp();
     const request = http.getRequest();
 
-    return await this.userService.IsUserAdmin({ user_id: request.user.id });
+    return await this.userService.isUserAdmin({ user_id: request.user.id });
   }
 }

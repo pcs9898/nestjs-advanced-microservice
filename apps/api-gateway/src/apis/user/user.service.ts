@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
 import { Repository } from 'typeorm';
 import { UserRole } from 'src/common/enum/global-enum';
 import { pageReqDto } from 'src/common/dto/req.dto';
+import { firstValueFrom } from 'rxjs';
+import { ClientProxy } from '@nestjs/microservices';
+import { PageResDto } from 'src/common/dto/res.dto';
+import { FindUserResDto } from './dto/res.dto';
 
 export interface IUserServiceUserIsUserAdmin {
   user_id: string;
@@ -12,30 +16,32 @@ export interface IUserServiceUserIsUserAdmin {
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @Inject('USER_SERVICE') private client: ClientProxy,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
-  findAll(data: pageReqDto) {
-    const { page, size } = data;
-
-    const users = this.userRepository.find({
-      skip: (page - 1) * size,
-      take: size,
-    });
-
-    return users;
+  async findAllUser(data: pageReqDto): Promise<PageResDto<FindUserResDto>> {
+    return await firstValueFrom(this.client.send({ cmd: 'findAllUser' }, data));
   }
 
-  async findOneById({ id }: { id: string }) {
-    const user = await this.userRepository.findOne({ where: { id } });
-
-    return user;
+  async findUserById({ id }: { id: string }) {
+    return await firstValueFrom(
+      this.client.send({ cmd: 'findUserById' }, { id }),
+    );
   }
 
-  async IsUserAdmin({
+  async findUserByIdNReturn({ id }: { id: string }) {
+    return await firstValueFrom(
+      this.client.send({ cmd: 'findUserByIdNReturn' }, { id }),
+    );
+  }
+
+  async isUserAdmin({
     user_id,
   }: IUserServiceUserIsUserAdmin): Promise<boolean> {
-    const user = await this.findOneById({ id: user_id });
+    const user = await firstValueFrom(
+      this.client.send({ cmd: 'isUserAdmin' }, { id: user_id }),
+    );
 
     return user.role === UserRole.Admin;
   }

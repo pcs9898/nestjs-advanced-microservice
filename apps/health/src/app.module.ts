@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
-import jwtConfig from './health/config/jwt.config';
-import mailConfig from './health/config/mail.config';
-import postgresConfig from './health/config/postgres.config';
-import redisConfig from './health/config/redis.config';
-import sentryConfig from './health/config/sentry.config';
-import slackConfig from './health/config/slack.config';
+import jwtConfig from './health/common/config/jwt.config';
+import mailConfig from './health/common/config/mail.config';
+import postgresConfig from './health/common/config/postgres.config';
+import redisConfig from './health/common/config/redis.config';
+import sentryConfig from './health/common/config/sentry.config';
+import slackConfig from './health/common/config/slack.config';
 import { HealthModule } from './health/health.module';
 
 @Module({

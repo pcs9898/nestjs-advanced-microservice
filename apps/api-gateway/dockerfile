@@ -10,5 +10,5 @@ COPY package*.json ./
 
 COPY . .
 
-CMD yarn install && \
+CMD rm -rf node_modules && rm -rf yarn.lock && yarn install && \
   yarn start:dev

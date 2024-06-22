@@ -4,10 +4,10 @@ import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
 import { Video } from '../video/entity/video.entity';
-import { FindAllUsersHandler } from './query/find-all-users.handler';
 import { CqrsModule } from '@nestjs/cqrs';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { FindAllUsersHandler } from './query/find-all-users.handler';
 import { FindOneUserHandler } from './query/find-one-user.handler';
-import { FindOneUserEventHandler } from './event/find-one-user-event.handler';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User, Video]), CqrsModule],
@@ -16,7 +16,18 @@ import { FindOneUserEventHandler } from './event/find-one-user-event.handler';
     UserService,
     FindAllUsersHandler,
     FindOneUserHandler,
-    FindOneUserEventHandler,
+    {
+      provide: 'USER_SERVICE',
+      useFactory: () => {
+        return ClientProxyFactory.create({
+          transport: Transport.TCP,
+          options: {
+            host: 'user-service',
+            port: 3001,
+          },
+        });
+      },
+    },
   ],
   exports: [UserService],
 })

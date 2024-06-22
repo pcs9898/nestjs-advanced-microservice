@@ -7,12 +7,6 @@ export class HealthService {
   constructor(@Inject('HEALTH_SERVICE') private client: ClientProxy) {}
 
   async healthCheckV1() {
-    const pattern = { cmd: 'healthCheckV1' };
-
-    const payload = {};
-
-    const result = await firstValueFrom(this.client.send(pattern, payload));
-
-    return result;
+    return await firstValueFrom(this.client.send({ cmd: 'healthCheckV1' }, {}));
   }
 }

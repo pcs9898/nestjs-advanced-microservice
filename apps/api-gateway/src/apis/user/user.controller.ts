@@ -21,53 +21,36 @@ import { FindOneUserQuery } from './query/find-one-user.query';
 export class UserController {
   constructor(
     private readonly userService: UserService,
-
     private readonly queryBus: QueryBus,
   ) {}
 
   @ApiGetItemResponse(PageResDto)
   @UseGuards(AdminRolesGuard)
   @Get('all/v1')
-  async findAllV1(
+  async findAllUserV1(
     @Query() data: pageReqDto,
   ): Promise<PageResDto<FindUserResDto>> {
-    const users = await this.userService.findAll(data);
-
-    return {
-      page: data.page,
-      size: data.size,
-      items: users.map((user) => FindUserResDto.toDto(user)),
-    };
+    return await this.userService.findAllUser(data);
   }
 
   @ApiGetItemResponse(PageResDto)
   @UseGuards(AdminRolesGuard)
   @Get('all/v2')
-  async findAllV2(
+  async findAllUserV2(
     @Query() data: pageReqDto,
   ): Promise<PageResDto<FindUserResDto>> {
-    const users = await this.queryBus.execute(new FindAllUsersQuery(data));
-
-    return {
-      page: data.page,
-      size: data.size,
-      items: users.map((user) => FindUserResDto.toDto(user)),
-    };
+    return await this.queryBus.execute(new FindAllUsersQuery(data));
   }
 
   @ApiGetResponse(FindUserResDto)
   @Get(':id/v1')
   async findOneV1(@Param() { id }: FindUserReqDto): Promise<FindUserResDto> {
-    const user = await this.userService.findOneById({ id });
-
-    return FindUserResDto.toDto(user);
+    return await this.userService.findUserByIdNReturn({ id });
   }
 
   @ApiGetItemResponse(FindUserResDto)
   @Get(':id/v2')
   async findOneV2(@Param() { id }: FindUserReqDto): Promise<FindUserResDto> {
-    const user = await this.queryBus.execute(new FindOneUserQuery(id));
-
-    return FindUserResDto.toDto(user);
+    return await this.queryBus.execute(new FindOneUserQuery(id));
   }
 }
