@@ -14,6 +14,7 @@ import { MessagePattern, Transport } from '@nestjs/microservices';
 import { IVideoServiceCreateVideo } from './interface/video-controller.interface';
 import { IVideoServiceDownloadVideoByIdRes } from './interface/video-service.interface';
 import { DownloadVideoQuery } from './query/download-video.query';
+import { Video } from './entity/video.entity';
 
 @ApiTags('Video')
 @ApiExtraModels(CreateVideoResDto, FindVideoResDto, FindVideoReqDto)
@@ -56,14 +57,15 @@ export class VideoController {
     return response;
   }
 
-  @MessagePattern({ cmd: 'downloadVideoById' })
+  @MessagePattern({ cmd: 'downloadVideoById' }, Transport.TCP)
   async downloadVideoById(
     data: DownloadVideoReqDto,
   ): Promise<IVideoServiceDownloadVideoByIdRes> {
-    const result = await this.queryBus.execute(new DownloadVideoQuery(data.id));
+    return await this.queryBus.execute(new DownloadVideoQuery(data.id));
+  }
 
-    // console.log(result.stream);
-
-    return result;
+  @MessagePattern({ cmd: 'findTop5DownloadVideos' }, Transport.TCP)
+  async findTop5DownloadVideos(): Promise<Video[]> {
+    return await this.videoService.findTop5DownloadVideos();
   }
 }

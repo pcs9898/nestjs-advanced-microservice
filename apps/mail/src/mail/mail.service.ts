@@ -3,6 +3,8 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IMailServiceSendUserAuthCode } from './interface/mail-service.interface';
 import { sendUserServiceAuthCodeTemplate } from './mail-template/send-user-authcode.template';
+import { SendFindTop5downloadVideosTemplate } from './mail-template/find-top5-download-videos.template';
+import { Video } from './entity/video.entity';
 // import { Video } from '../video/entity/video.entity';
 // import { SendFindTop5downloadVideosTemplate } from './mail-template/find-top5-download-videos.template';
 
@@ -41,28 +43,30 @@ export class MailService {
       });
   }
 
-  // async sendFindTop5downloadVideos(videos: Video[]) {
-  //   const data = videos.map(
-  //     ({ id, title, downloadCnt }) => `
-  //       <tr>
-  //       <td>${id}</td>
-  //       <td>${title}</td>
-  //       <td>${downloadCnt}</td>
-  //       </tr>`,
-  //   );
+  async sendFindTop5downloadVideos(videos: Video[]) {
+    const data = videos.map(
+      ({ id, title, downloadCnt }) => `
+        <tr>
+        <td>${id}</td>
+        <td>${title}</td>
+        <td>${downloadCnt}</td>
+        </tr>`,
+    );
 
-  //   const mailHtmlData = SendFindTop5downloadVideosTemplate({ data });
+    console.log('sendFindTop5downloadVideos called');
 
-  //   await this.mailerService
-  //     .sendMail({
-  //       to: this.configService.get('mail.senderEmail'),
-  //       from: 'nesttube@nesttube.com',
-  //       subject: 'Top 5 downloaded Videos by Nest Tube',
-  //       html: mailHtmlData,
-  //     })
-  //     .then(() => {})
-  //     .catch((e) => {
-  //       throw new InternalServerErrorException(e.message);
-  //     });
-  // }
+    const mailHtmlData = SendFindTop5downloadVideosTemplate({ data });
+
+    await this.mailerService
+      .sendMail({
+        to: this.configService.get('mail.senderEmail'),
+        from: 'nesttube@nesttube.com',
+        subject: 'Top 5 downloaded Videos by Nest Tube',
+        html: mailHtmlData,
+      })
+      .then(() => {})
+      .catch((e) => {
+        throw new InternalServerErrorException(e.message);
+      });
+  }
 }

@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ReadStream } from 'fs';
 import { readFile, stat } from 'fs/promises';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'path';
@@ -164,9 +163,8 @@ export class VideoService {
     };
   }
 
-  async findTop5DownloadVideos() {
+  async findTop5DownloadVideos(): Promise<Video[]> {
     const videos = await this.videoRepository.find({
-      relations: ['user'],
       order: {
         downloadCnt: 'DESC',
       },
