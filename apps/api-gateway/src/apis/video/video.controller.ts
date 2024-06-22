@@ -12,35 +12,36 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiConsumes,
   ApiExtraModels,
   ApiTags,
 } from '@nestjs/swagger';
-import { CreateVideoResDto, FindVideoResDto } from './dto/res.dto';
+import { SkipThrottle } from '@nestjs/throttler';
+import { Response } from 'express';
+import { GetUser } from 'src/common/decorator/get-user.decorator';
+import { Public } from 'src/common/decorator/public.decorator';
+import {
+  ApiGetItemResponse,
+  ApiPostResponse,
+} from 'src/common/decorator/swagger.decorator';
+import { pageReqDto } from 'src/common/dto/req.dto';
+import { PageResDto } from 'src/common/dto/res.dto';
+import { IAuthUser } from 'src/common/types/global-types';
+import { UploadVideoCommand } from './command/upload-video.command';
 import {
   CreateVideoReqDto,
   DownloadVideoReqDto,
   FindVideoReqDto,
 } from './dto/req.dto';
-import { VideoService } from './video.service';
-import {
-  ApiGetItemResponse,
-  ApiPostResponse,
-} from 'src/common/decorator/swagger.decorator';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { GetUser } from 'src/common/decorator/get-user.decorator';
-import { IAuthUser } from 'src/common/types/global-types';
-import { Public } from 'src/common/decorator/public.decorator';
-import { SkipThrottle } from '@nestjs/throttler';
-import { pageReqDto } from 'src/common/dto/req.dto';
-import { PageResDto } from 'src/common/dto/res.dto';
-import { Response } from 'express';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { UploadVideoCommand } from './command/upload-video.command';
+import { CreateVideoResDto, FindVideoResDto } from './dto/res.dto';
 import { FindAllVideosQuery } from './query/findAll-videos.query';
 import { FindOneVideoQuery } from './query/findOne-video.handler';
+import { VideoService } from './video.service';
+import { ReadStream } from 'fs';
 import { DownloadVideoQuery } from './query/download-video.query';
 
 @ApiTags('Video')
@@ -58,7 +59,7 @@ export class VideoController {
   @ApiPostResponse(CreateVideoResDto)
   @Post('upload/v1')
   @UseInterceptors(FileInterceptor('video'))
-  async uploadV1(
+  async createVideoV1(
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({ fileType: 'mp4' })
@@ -71,11 +72,7 @@ export class VideoController {
     @Body() { title }: CreateVideoReqDto,
     @GetUser() user: IAuthUser,
   ): Promise<CreateVideoResDto> {
-    const video = await this.videoService.create({ file, title, user });
-
-    const response = CreateVideoResDto.toDto(video);
-
-    return response;
+    return await this.videoService.createVideo({ file, title, user });
   }
 
   @ApiBearerAuth()
@@ -83,7 +80,7 @@ export class VideoController {
   @ApiPostResponse(CreateVideoResDto)
   @Post('upload/v2')
   @UseInterceptors(FileInterceptor('video'))
-  async uploadV2(
+  async createVideoV2(
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({ fileType: 'mp4' })
@@ -96,45 +93,29 @@ export class VideoController {
     @Body() { title }: CreateVideoReqDto,
     @GetUser() user: IAuthUser,
   ): Promise<CreateVideoResDto> {
-    const video = await this.commandBus.execute(
+    return await this.commandBus.execute(
       new UploadVideoCommand(file, title, user),
     );
-
-    const result = CreateVideoResDto.toDto(video);
-
-    return result;
   }
 
   @Public()
   @ApiGetItemResponse(FindVideoResDto)
   @SkipThrottle()
   @Get('v1')
-  async findAllV1(
+  async findAllVideosV1(
     @Query() data: pageReqDto,
   ): Promise<PageResDto<FindVideoResDto>> {
-    const videos = await this.videoService.findAll(data);
-
-    return {
-      page: data.page,
-      size: data.size,
-      items: videos.map((v) => FindVideoResDto.toDto(v)),
-    };
+    return await this.videoService.findAllVideos(data);
   }
 
   @Public()
   @ApiGetItemResponse(FindVideoResDto)
   @SkipThrottle()
   @Get('v2')
-  async findAllV2(
+  async findAllVideosV2(
     @Query() data: pageReqDto,
   ): Promise<PageResDto<FindVideoResDto>> {
-    const videos = await this.queryBus.execute(new FindAllVideosQuery(data));
-
-    return {
-      page: data.page,
-      size: data.size,
-      items: videos.map((v) => FindVideoResDto.toDto(v)),
-    };
+    return await this.queryBus.execute(new FindAllVideosQuery(data));
   }
 
   @Public()
@@ -142,11 +123,7 @@ export class VideoController {
   @SkipThrottle()
   @Get(':id/v1')
   async findOneV1(@Query() { id }: FindVideoReqDto): Promise<FindVideoResDto> {
-    const video = await this.videoService.findOne({ id });
-
-    const response = FindVideoResDto.toDto(video);
-
-    return response;
+    return await this.videoService.findVideoById({ id });
   }
 
   @Public()
@@ -154,11 +131,7 @@ export class VideoController {
   @SkipThrottle()
   @Get(':id/v2')
   async findOneV2(@Query() { id }: FindVideoReqDto): Promise<FindVideoResDto> {
-    const video = await this.queryBus.execute(new FindOneVideoQuery(id));
-
-    const response = FindVideoResDto.toDto(video);
-
-    return response;
+    return await this.queryBus.execute(new FindOneVideoQuery(id));
   }
 
   @ApiBearerAuth()
@@ -167,7 +140,10 @@ export class VideoController {
     @Param() { id }: DownloadVideoReqDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { mimetype, stream, size } = await this.videoService.download({ id });
+    const { mimetype, buffer, size } =
+      await this.videoService.downloadVideoById({ id });
+
+    const stream = ReadStream.from(Buffer.from(buffer.data));
 
     res.set({
       'Content-Type': mimetype,
@@ -184,9 +160,11 @@ export class VideoController {
     @Param() { id }: DownloadVideoReqDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { mimetype, stream, size } = await this.queryBus.execute(
+    const { mimetype, buffer, size } = await this.queryBus.execute(
       new DownloadVideoQuery(id),
     );
+
+    const stream = ReadStream.from(Buffer.from(buffer.data));
 
     res.set({
       'Content-Type': mimetype,

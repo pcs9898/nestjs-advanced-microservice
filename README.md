@@ -52,14 +52,14 @@ separate APIs to which the cqrs pattern is applied into microservices
 - [x] ScheduledBatchService-unVerifiedUserOver30DaysCleanUp
 - [x] detach to microservice
 
-## Video MicroService - tcp in - postgres(video-service)
+## Video MicroService - tcp,kafka in, tcp out - postgres(video-service)
 
 - [x] api10-upload/v1
 - [x] api11-findAll/v1
 - [x] api12-findOne/v1
 - [x] api13-download/v1
 - [x] cqrs (api10,11,12,13) with api v2
-- [ ] detach to microservice
+- [x] detach to microservice
 
 ## Analytics MicroService - kafka out
 

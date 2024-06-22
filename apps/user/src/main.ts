@@ -29,6 +29,8 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
   await app.listen(3009);
+
   console.info(`user-service listening on 3001 for tcp`);
+  console.info(`user-service listening for kafka requests`);
 }
 bootstrap();

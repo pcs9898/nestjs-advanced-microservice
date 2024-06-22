@@ -5,17 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Video } from './entity/video.entity';
 import { MulterExceptionFilter } from './filter/multer-exception.filter';
 import { CqrsModule } from '@nestjs/cqrs';
-// import { UploadVideoHandler } from './command/upload-video.handler';
-// import { UploadVideoEventHandler } from './event/upload-video-event.handler';
-// import { FindAllVideosHandler } from './query/findAll-videos.handler';
-// import { FindOneVideoHandler } from './query/findOne-video.query';
-// import { DownloadVideoHandler } from './query/download-video.handler';
-import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { UploadVideoHandler } from './command/upload-video.handler';
 import { UploadVideoEventHandler } from './event/upload-video-event.handler';
 import { FindAllVideosHandler } from './query/findAll-videos.handler';
 import { FindOneVideoHandler } from './query/findOne-video.query';
 import { DownloadVideoHandler } from './query/download-video.handler';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Video]), CqrsModule],
@@ -29,13 +24,13 @@ import { DownloadVideoHandler } from './query/download-video.handler';
     FindOneVideoHandler,
     DownloadVideoHandler,
     {
-      provide: 'VIDEO_SERVICE',
+      provide: 'USER_SERVICE',
       useFactory: () => {
         return ClientProxyFactory.create({
           transport: Transport.TCP,
           options: {
-            host: 'video-service',
-            port: 3002,
+            host: 'user-service',
+            port: 3001,
           },
         });
       },

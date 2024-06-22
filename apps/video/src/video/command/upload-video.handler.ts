@@ -1,8 +1,8 @@
 import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { UploadVideoCommand } from './upload-video.command';
+import { Video } from '../entity/video.entity';
 import { VideoService } from '../video.service';
 import { UploadVideoEvent } from '../event/upload-video-event';
-import { CreateVideoResDto } from '../dto/res.dto';
 
 @CommandHandler(UploadVideoCommand)
 export class UploadVideoHandler implements ICommandHandler<UploadVideoCommand> {
@@ -11,12 +11,12 @@ export class UploadVideoHandler implements ICommandHandler<UploadVideoCommand> {
     private readonly eventBus: EventBus,
   ) {}
 
-  async execute(command: UploadVideoCommand): Promise<CreateVideoResDto> {
-    const { file, title, user } = command;
+  async execute(command: UploadVideoCommand): Promise<Video> {
+    const { data } = command;
 
-    const video = await this.videoService.createVideo({ file, title, user });
+    const video = await this.videoService.createVideo(data);
 
-    this.eventBus.publish(new UploadVideoEvent(title));
+    this.eventBus.publish(new UploadVideoEvent(data.title));
 
     return video;
   }
