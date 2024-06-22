@@ -2,8 +2,8 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
 import { Repository } from 'typeorm';
-import { pageReqDto } from './common/dto/req.dto';
-import { UserRole } from './common/enum/global-enum';
+import { pageReqDto } from '../common/dto/req.dto';
+import { UserRole } from '../common/enum/global-enum';
 import { SignupReqDto } from './dto/req.dto';
 import * as bcrypt from 'bcrypt';
 

@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
-import jwtConfig from './mail/common/config/jwt.config';
-import mailConfig from './mail/common/config/mail.config';
-import postgresConfig from './mail/common/config/postgres.config';
-import redisConfig from './mail/common/config/redis.config';
-import sentryConfig from './mail/common/config/sentry.config';
-import slackConfig from './mail/common/config/slack.config';
+import jwtConfig from './common/config/jwt.config';
+import mailConfig from './common/config/mail.config';
+import postgresConfig from './common/config/postgres.config';
+import redisConfig from './common/config/redis.config';
+import sentryConfig from './common/config/sentry.config';
+import slackConfig from './common/config/slack.config';
 import { MailModule } from './mail/mail.module';
 
 @Module({

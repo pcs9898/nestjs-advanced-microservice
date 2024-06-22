@@ -29,12 +29,15 @@ import {
     CqrsModule,
     ClientsModule.register([
       {
-        name: 'KAFKA',
+        name: 'AUTH_SERVICE',
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'kafka',
+            clientId: 'auth',
             brokers: ['host.docker.internal:9092'],
+          },
+          consumer: {
+            groupId: 'auth-consumer',
           },
         },
       },

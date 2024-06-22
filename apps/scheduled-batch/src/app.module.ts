@@ -8,7 +8,7 @@ import postgresConfig from './common/config/postgres.config';
 import redisConfig from './common/config/redis.config';
 import sentryConfig from './common/config/sentry.config';
 import slackConfig from './common/config/slack.config';
-import { HealthModule } from './health/health.module';
+import { ScheduledBatchModule } from './scheduled-batch/scheduled-batch.module';
 
 @Module({
   imports: [
@@ -37,11 +37,9 @@ import { HealthModule } from './health/health.module';
           autoLoadEntities: true,
         };
 
-        console.log(configService.get('postgres.database'));
-
         if (configService.get('NODE_ENV') === 'development') {
           console.info('Sync Typeorm');
-          obj = Object.assign(obj, { synchronize: false, logging: true });
+          obj = Object.assign(obj, { synchronize: true, logging: true });
         }
         return obj;
       },
@@ -64,7 +62,7 @@ import { HealthModule } from './health/health.module';
         return obj;
       },
     }),
-    HealthModule,
+    ScheduledBatchModule,
   ],
 })
 export class AppModule {}

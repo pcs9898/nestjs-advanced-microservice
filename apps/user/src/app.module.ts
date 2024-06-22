@@ -1,21 +1,14 @@
-import {
-  Logger,
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
-import jwtConfig from './user/common/config/jwt.config';
-import mailConfig from './user/common/config/mail.config';
-import postgresConfig from './user/common/config/postgres.config';
-import redisConfig from './user/common/config/redis.config';
-import sentryConfig from './user/common/config/sentry.config';
-import slackConfig from './user/common/config/slack.config';
+import jwtConfig from './common/config/jwt.config';
+import mailConfig from './common/config/mail.config';
+import postgresConfig from './common/config/postgres.config';
+import redisConfig from './common/config/redis.config';
+import sentryConfig from './common/config/sentry.config';
+import slackConfig from './common/config/slack.config';
 import { UserModule } from './user/user.module';
-import { LoggerMiddleware } from './user/common/middleware/logger.middleware';
 
 @Module({
   imports: [

@@ -32,7 +32,7 @@ import {
   IAuthServiceVerifyEmailAuthCode,
   IAuthServiceResendAuthCode,
 } from './interface/auth-service.interface';
-import { ClientKafka, ClientProxy } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -43,7 +43,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     @InjectRedis() private readonly redis: Redis,
     @Inject('USER_SERVICE') private client: ClientProxy,
-    @Inject('KAFKA') private kafkaClient: ClientKafka,
+    @Inject('AUTH_SERVICE') private kafkaClient: ClientProxy,
   ) {}
 
   async signup(data: SignupReqDto): Promise<SignupResDto> {

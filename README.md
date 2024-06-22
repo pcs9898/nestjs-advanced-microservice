@@ -25,7 +25,7 @@ separate APIs to which the cqrs pattern is applied into microservices
 - [x] app.module.ts, main.ts settings
 - [x] all microservices docker-compose, db's docker-compose, .env configuration
 
-## Api-gateway(include auth logic) - tcp, kafka - redis
+## Api-gateway(include auth logic) - tcp, kafka out - redis
 
 - [x] api1-signup/v1
 - [x] api2-verifyAuthCode/v1
@@ -40,19 +40,19 @@ separate APIs to which the cqrs pattern is applied into microservices
 - [x] api7-check/v1
 - [x] detach to microservice
 
-## User MicroService - tcp - postgres(user-service)
+## User MicroService - tcp,kafka in (hybrid app) - postgres(user-service)
 
 - [x] api8-findAll/v1
 - [x] api9-findOne/v1
 - [x] cqrs (api8,9) with api v2
 - [x] detach to microservice
 
-## Schedule-batch MicroService - kafka
+## Schedule-batch MicroService - kafka out
 
 - [x] ScheduledBatchService-unVerifiedUserOver30DaysCleanUp
-- [ ] detach to microservice
+- [x] detach to microservice
 
-## Video MicroService - tcp - postgres(video-service)
+## Video MicroService - tcp in - postgres(video-service)
 
 - [x] api10-upload/v1
 - [x] api11-findAll/v1
@@ -61,12 +61,12 @@ separate APIs to which the cqrs pattern is applied into microservices
 - [x] cqrs (api10,11,12,13) with api v2
 - [ ] detach to microservice
 
-## Analytics MicroService - kafka
+## Analytics MicroService - kafka out
 
 - [x] AnalyticsService-findTop5DownloadVideos
 - [ ] detach to microservice
 
-## Mail MicroService - kafka
+## Mail MicroService - kafka in
 
 - [x] MailService-sendAuthCode
 - [x] MailService-sendFindTop5downloadVideos
